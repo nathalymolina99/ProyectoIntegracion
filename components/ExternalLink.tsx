@@ -1,24 +1,33 @@
 import React from 'react';
-import { Link } from 'expo-router';
+import { Link, LinkProps, Href } from 'expo-router';
 import { openBrowserAsync } from 'expo-web-browser';
-import { type ComponentProps } from 'react';
 import { Platform } from 'react-native';
 
-// Cambiar el tipo 'href' para aceptar cualquier tipo de string o objeto
-type Props = Omit<ComponentProps<typeof Link>, 'href'> & { href: string | object };
+// Definimos un tipo que representa todas las posibles rutas de tu aplicación
+type AppRoutes = 
+  | "/"
+  | "/(tabs)"
+  // Añade aquí todas las rutas posibles de tu aplicación
+  ;
+
+type Props = Omit<LinkProps<AppRoutes>, 'href'> & {
+  href: AppRoutes | Href<AppRoutes> | string;
+};
 
 export function ExternalLink({ href, ...rest }: Props) {
   return (
-    <Link
+    <Link<AppRoutes>
       target="_blank"
       {...rest}
-      href={href}
+      href={href as Href<AppRoutes>}
       onPress={async (event) => {
         if (Platform.OS !== 'web') {
-          // Prevent the default behavior of linking to the default browser on native.
           event.preventDefault();
-          // Open the link in an in-app browser.
-          await openBrowserAsync(href as string); // Asegúrate de que 'href' sea un string aquí
+          if (typeof href === 'string') {
+            await openBrowserAsync(href);
+          } else {
+            console.error('href is an object, not supported in native');
+          }
         }
       }}
     />
